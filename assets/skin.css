@@ -1,0 +1,496 @@
+/* ============================================================
+   DSH Mobile WeChat Skin (微信风格移动端皮肤)
+   Scope: only active when <html> carries the `dsh-wx` class,
+   which is set by the UA-sniffing snippet in index.html.
+   Desktop browsers are completely unaffected.
+   ============================================================ */
+
+html.dsh-wx {
+  color-scheme: light !important;
+  background: #ededed;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+html.dsh-wx body {
+  background: #ededed;
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue",
+    "Hiragino Sans GB", "Microsoft YaHei", "Segoe UI", Roboto, sans-serif;
+  overscroll-behavior-y: none;
+}
+
+/* ---------- view mode plumbing ---------- */
+/* list mode: hide the whole app behind the WeChat-style list overlay */
+html.dsh-wx.wx-mode-list #root { visibility: hidden; }
+html.dsh-wx.wx-mode-list #wxm-mobile-root { display: block !important; }
+html.dsh-wx.wx-mode-list #wxm-chatbar { display: none !important; }
+
+/* chat mode: hide the list, show the chat chrome */
+html.dsh-wx.wx-mode-chat #wxm-mobile-root { display: none !important; }
+html.dsh-wx.wx-mode-chat #wxm-chatbar { display: flex !important; }
+
+/* the app's own session header (对话/轨迹 tabs) is replaced by our WeChat bar */
+html.dsh-wx [data-slot="conversation.session.header"] { display: none !important; }
+
+/* the floating whale pet would block the composer on phones */
+html.dsh-wx [data-whale-girl] { display: none !important; }
+
+/* ---------- app frame: single column, no sidebar/details ---------- */
+html.dsh-wx [data-wx-frame] {
+  display: block !important;
+  grid-template-columns: none !important;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+}
+html.dsh-wx [data-wx-sidebar],
+html.dsh-wx [data-wx-details] { display: none !important; }
+html.dsh-wx [data-wx-center] {
+  width: 100% !important;
+  max-width: 100% !important;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+}
+html.dsh-wx [data-wx-center] > * { height: 100%; }
+
+/* conversation root fills the column */
+html.dsh-wx [data-conversation-scroll] {
+  background: #ededed !important;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ============================================================
+   LIST VIEW (微信聊天列表 / 通讯录风格)
+   ============================================================ */
+#wxm-mobile-root {
+  position: fixed;
+  inset: 0;
+  z-index: 3000;
+  background: #ededed;
+  color: #191919;
+  display: none;
+  flex-direction: column;
+}
+html.dsh-wx #wxm-mobile-root { display: flex; }
+html.dsh-wx.wx-mode-chat #wxm-mobile-root { display: none; }
+
+#wxm-nav {
+  flex: none;
+  background: #ededed;
+  padding: calc(env(safe-area-inset-top, 0px) + 10px) 8px 8px 8px;
+  border-bottom: 0.5px solid #d5d5d5;
+  position: relative;
+  text-align: center;
+}
+#wxm-nav-title {
+  font-size: 17px;
+  font-weight: 600;
+  color: #191919;
+  line-height: 24px;
+  display: inline-block;
+  max-width: 60%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+#wxm-nav-count { color: #191919; font-weight: 400; }
+#wxm-new {
+  position: absolute;
+  right: 4px;
+  top: calc(env(safe-area-inset-top, 0px) + 6px);
+  width: 36px;
+  height: 36px;
+  border: none;
+  background: transparent;
+  color: #191919;
+  font-size: 24px;
+  line-height: 36px;
+  padding: 0;
+  cursor: pointer;
+  border-radius: 8px;
+}
+#wxm-new:active { background: rgba(0, 0, 0, 0.06); }
+
+#wxm-searchbar {
+  flex: none;
+  padding: 8px 12px;
+  background: #ededed;
+}
+#wxm-search {
+  width: 100%;
+  box-sizing: border-box;
+  height: 32px;
+  border: none;
+  outline: none;
+  background: #ffffff;
+  border-radius: 6px;
+  padding: 0 10px;
+  font-size: 16px; /* >=16px prevents iOS focus zoom */
+  color: #191919;
+}
+#wxm-search::placeholder { color: #b2b2b2; }
+
+#wxm-list {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  background: #ededed;
+  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 16px);
+}
+
+/* workspace section header (通讯录分组样式) */
+.wxm-section {
+  padding: 6px 16px;
+  font-size: 14px;
+  color: #808080;
+  background: #ededed;
+}
+
+/* one "friend" row = one session */
+.wxm-row {
+  display: flex;
+  align-items: center;
+  background: #ffffff;
+  padding: 8px 12px;
+  cursor: pointer;
+  position: relative;
+  min-height: 56px;
+  box-sizing: border-box;
+}
+.wxm-row:active { background: #e5e5e5; }
+.wxm-row + .wxm-row::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 76px;
+  right: 0;
+  height: 0.5px;
+  background: #e7e7e7;
+  transform: scaleY(0.6);
+}
+.wxm-avatar {
+  flex: none;
+  width: 48px;
+  height: 48px;
+  border-radius: 6px;
+  margin-right: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  font-weight: 600;
+  color: #fff;
+  background: var(--wxm-av, #07c160);
+  user-select: none;
+  overflow: hidden;
+}
+.wxm-row-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 4px 0;
+}
+.wxm-row-top {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+.wxm-row-title {
+  flex: 1;
+  min-width: 0;
+  font-size: 17px;
+  color: #191919;
+  line-height: 22px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.wxm-row-time {
+  flex: none;
+  font-size: 12px;
+  color: #b2b2b2;
+}
+.wxm-row-bottom {
+  display: flex;
+  align-items: center;
+}
+.wxm-row-preview {
+  flex: 1;
+  min-width: 0;
+  font-size: 14px;
+  color: #999999;
+  line-height: 18px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.wxm-dot {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #07c160;
+  margin-left: 8px;
+  display: none;
+}
+.wxm-row.is-ongoing .wxm-dot { display: block; }
+.wxm-empty {
+  padding: 48px 16px;
+  text-align: center;
+  color: #b2b2b2;
+  font-size: 14px;
+}
+
+/* ============================================================
+   CHAT VIEW (微信对话页风格)
+   ============================================================ */
+#wxm-chatbar {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 3000;
+  align-items: center;
+  height: calc(env(safe-area-inset-top, 0px) + 44px);
+  padding: env(safe-area-inset-top, 0px) 4px 0 4px;
+  box-sizing: content-box;
+  background: #ededed;
+  border-bottom: 0.5px solid #d5d5d5;
+  color: #191919;
+}
+#wxm-back {
+  flex: none;
+  width: 44px;
+  height: 44px;
+  border: none;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+#wxm-back svg { display: block; }
+#wxm-chat-title {
+  flex: 1;
+  min-width: 0;
+  text-align: center;
+  font-size: 17px;
+  font-weight: 600;
+  color: #191919;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+#wxm-chat-status {
+  flex: none;
+  width: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+#wxm-chat-status .wxm-dot { display: block; margin: 0; }
+html.dsh-wx.wx-mode-chat #wxm-chat-status.is-ongoing .wxm-dot { display: block; }
+html.dsh-wx #wxm-chat-status .wxm-dot { display: none; }
+html.dsh-wx.wx-mode-chat #wxm-chat-status.is-ongoing .wxm-dot { display: block; }
+
+/* chat area paddings so content clears the fixed bar */
+html.dsh-wx.wx-mode-chat [data-conversation-scroll] {
+  padding-top: calc(env(safe-area-inset-top, 0px) + 44px) !important;
+}
+
+/* ---- message flow ---- */
+html.dsh-wx [data-chat-flow] {
+  max-width: 100% !important;
+  padding: 14px 12px calc(24px + env(safe-area-inset-bottom, 0px)) !important;
+  gap: 16px !important;
+}
+
+/* every flow item is positioned so we can hang avatars off it */
+html.dsh-wx [data-chat-flow-kind] { position: relative; }
+
+/* -- user messages: green bubble, avatar on the right -- */
+html.dsh-wx [data-chat-flow-kind="user"] [class*="userRow"],
+html.dsh-wx [data-chat-flow-kind="user"] [class*="userStack"] {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  max-width: 100%;
+}
+html.dsh-wx [data-chat-flow-kind="user"] [class*="bubble"] {
+  background: #95ec69 !important;
+  color: #191919;
+  border-radius: 8px !important;
+  padding: 10px 13px !important;
+  max-width: calc(100% - 4px) !important;
+  box-shadow: none !important;
+  border: none !important;
+  font-size: 17px;
+  line-height: 1.45;
+  margin-right: 52px;
+  box-sizing: border-box;
+  width: fit-content;
+}
+html.dsh-wx [data-chat-flow-kind="user"] [class*="bubble"] * {
+  color: #191919 !important;
+  font-size: 17px !important;
+  line-height: 1.45 !important;
+}
+html.dsh-wx [data-chat-flow-kind="user"]::after {
+  content: "我";
+  position: absolute;
+  right: 0;
+  top: 2px;
+  width: 40px;
+  height: 40px;
+  border-radius: 6px;
+  background: #07c160;
+  color: #fff;
+  font-size: 16px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1;
+}
+/* timestamp row under the bubble */
+html.dsh-wx [data-chat-flow-kind="user"] [class*="actions"] {
+  opacity: 1 !important;
+  justify-content: flex-end;
+  margin-right: 52px;
+  gap: 6px;
+  padding: 2px 2px 0;
+}
+html.dsh-wx [data-chat-flow-kind="user"] [class*="time"] {
+  font-size: 11px !important;
+  color: #b2b2b2 !important;
+}
+
+/* -- assistant messages: white bubble, avatar on the left -- */
+html.dsh-wx [data-chat-flow-kind="assistant-step"] {
+  padding-left: 52px !important;
+}
+html.dsh-wx [data-chat-flow-kind="assistant-step"]::before {
+  content: "DS";
+  position: absolute;
+  left: 0;
+  top: 2px;
+  width: 40px;
+  height: 40px;
+  border-radius: 6px;
+  background: linear-gradient(135deg, #4d6bfe, #7b9aff);
+  color: #fff;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1;
+}
+html.dsh-wx [data-chat-flow-kind="assistant-step"] div[class*="_body"] {
+  background: #ffffff !important;
+  border-radius: 8px !important;
+  padding: 10px 13px !important;
+  box-shadow: none !important;
+  border: none !important;
+  max-width: 100% !important;
+  box-sizing: border-box;
+  display: inline-block;
+}
+html.dsh-wx [data-chat-flow-kind="assistant-step"] [class*="_markdown"] {
+  font-size: 17px;
+  line-height: 1.5;
+  color: #191919;
+  overflow-x: auto;
+}
+html.dsh-wx [data-chat-flow-kind="assistant-step"] [class*="_markdown"] p {
+  margin: 0 0 8px;
+}
+html.dsh-wx [data-chat-flow-kind="assistant-step"] [class*="_markdown"] pre {
+  background: #f7f7f7;
+  border-radius: 6px;
+  padding: 8px;
+  overflow-x: auto;
+  font-size: 13px;
+}
+
+/* think (思考过程) sub-card inside the bubble */
+html.dsh-wx [data-variant="think"] {
+  background: #f7f7f7 !important;
+  border-radius: 6px !important;
+  padding: 6px 8px !important;
+  margin-bottom: 6px;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+/* -- tool calls: indented, compact, card-like -- */
+html.dsh-wx [data-chat-flow-kind="tool-call"] {
+  margin-left: 52px;
+  margin-right: 8px;
+}
+html.dsh-wx [data-chat-flow-kind="tool-call"] [class*="_root"] {
+  font-size: 13px;
+}
+
+/* -- context injections: WeChat "system notice" style -- */
+html.dsh-wx [data-chat-flow-kind="context"] {
+  display: flex;
+  justify-content: center;
+  padding: 2px 0 !important;
+  font-size: 12px;
+  color: #9a9a9a;
+}
+html.dsh-wx [data-chat-flow-kind="context"] [class*="_root"],
+html.dsh-wx [data-chat-flow-kind="context"] div {
+  font-size: 12px !important;
+  color: #9a9a9a !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  max-width: 92%;
+  overflow: hidden;
+}
+
+/* ---- composer (输入区) ---- */
+html.dsh-wx [data-composer-seat] {
+  background: #f7f7f7 !important;
+  border-top: 0.5px solid #d5d5d5;
+  padding-bottom: env(safe-area-inset-bottom, 0px) !important;
+}
+html.dsh-wx [data-composer-card] {
+  background: #ffffff !important;
+  border: none !important;
+  box-shadow: none !important;
+  border-radius: 8px !important;
+}
+html.dsh-wx [data-composer-card] textarea[class*="_input"],
+html.dsh-wx [data-composer-card] textarea {
+  font-size: 16px !important; /* prevent iOS focus zoom */
+  line-height: 1.4 !important;
+}
+html.dsh-wx [data-composer-card] button[class*="_primary"],
+html.dsh-wx [data-composer-card] button[aria-label*="发送"] {
+  background: #07c160 !important;
+  color: #ffffff !important;
+  border-radius: 6px !important;
+}
+html.dsh-wx [data-composer-card] button[class*="_primary"]:disabled,
+html.dsh-wx [data-composer-card] button[aria-label*="发送"]:disabled {
+  background: #dcdcdc !important;
+  color: #ffffff !important;
+}
+
+/* hero (新会话首屏) tinted like WeChat */
+html.dsh-wx [data-phase="hero"] { background: #ededed; }
+
+/* ============================================================
+   Generic mobile usability for portaled dialogs/menus
+   (kept conservative: only direct body children that float)
+   ============================================================ */
+html.dsh-wx body > div:not(#root):not(#wxm-mobile-root):not(#wxm-chatbar) {
+  max-width: 96vw;
+}
