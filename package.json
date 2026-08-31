@@ -1,0 +1,42 @@
+{
+  "name": "dsh-wechat-mobile-skin",
+  "version": "1.0.0",
+  "description": "WeChat-style mobile skin for the DeepSeek Harness Web GUI. Mobile browsers get a WeChat chat-list (sessions as contacts) and a WeChat-style chat page; desktop stays untouched. · DeepSeek Harness 移动端微信风格皮肤：手机浏览器自动切换微信聊天交互，历史会话展示为微信好友样式，解决移动端排版问题；桌面端零改动。",
+  "type": "module",
+  "main": "lib/index.js",
+  "files": [
+    "lib",
+    "assets",
+    "docs",
+    "screenshots.json",
+    "cordis.patch.yml",
+    "README.md",
+    "README.en.md",
+    "LICENSE"
+  ],
+  "exports": {
+    ".": "./lib/index.js",
+    "./cordis.patch.yml": "./cordis.patch.yml",
+    "./package.json": "./package.json"
+  },
+  "keywords": [
+    "deepseek",
+    "harness",
+    "dsh",
+    "dsh-plugin",
+    "wechat",
+    "mobile",
+    "responsive",
+    "skin",
+    "ui"
+  ],
+  "author": {
+    "name": "侯晓东 (Hou Xiaodong)"
+  },
+  "license": "MIT",
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  }
+}

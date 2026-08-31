@@ -1,0 +1,10 @@
+# The dsh-wechat-mobile-skin bundle patch.
+# Applied automatically when this package is listed in the profile's
+# `dsh.profile.bundles`; the same row can also be pasted into the profile's
+# own cordis.patch.yml by hand (see README).
+
+- insert:
+    - id: wechat-mobile-skin
+      name: dsh-wechat-mobile-skin
+      config:
+        enabled: true
