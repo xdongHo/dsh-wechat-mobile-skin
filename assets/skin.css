@@ -309,10 +309,10 @@ html.dsh-wx [data-chat-flow] {
   gap: 16px !important;
 }
 
-/* every flow item is positioned so we can hang avatars off it */
+/* flow items position context (timestamp rows, notice centering) */
 html.dsh-wx [data-chat-flow-kind] { position: relative; }
 
-/* -- user messages: green bubble, avatar on the right -- */
+/* -- user messages: green bubble, right-aligned -- */
 html.dsh-wx [data-chat-flow-kind="user"] [class*="userRow"],
 html.dsh-wx [data-chat-flow-kind="user"] [class*="userStack"] {
   display: flex;
@@ -330,7 +330,6 @@ html.dsh-wx [data-chat-flow-kind="user"] [class*="bubble"] {
   border: none !important;
   font-size: 17px;
   line-height: 1.45;
-  margin-right: 52px;
   box-sizing: border-box;
   width: fit-content;
 }
@@ -339,28 +338,10 @@ html.dsh-wx [data-chat-flow-kind="user"] [class*="bubble"] * {
   font-size: 17px !important;
   line-height: 1.45 !important;
 }
-html.dsh-wx [data-chat-flow-kind="user"]::after {
-  content: "我";
-  position: absolute;
-  right: 0;
-  top: 2px;
-  width: 40px;
-  height: 40px;
-  border-radius: 6px;
-  background: #07c160;
-  color: #fff;
-  font-size: 16px;
-  font-weight: 600;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1;
-}
 /* timestamp row under the bubble */
 html.dsh-wx [data-chat-flow-kind="user"] [class*="actions"] {
   opacity: 1 !important;
   justify-content: flex-end;
-  margin-right: 52px;
   gap: 6px;
   padding: 2px 2px 0;
 }
@@ -369,28 +350,7 @@ html.dsh-wx [data-chat-flow-kind="user"] [class*="time"] {
   color: #b2b2b2 !important;
 }
 
-/* -- assistant messages: white bubble, avatar on the left -- */
-html.dsh-wx [data-chat-flow-kind="assistant-step"] {
-  padding-left: 52px !important;
-}
-html.dsh-wx [data-chat-flow-kind="assistant-step"]::before {
-  content: "DS";
-  position: absolute;
-  left: 0;
-  top: 2px;
-  width: 40px;
-  height: 40px;
-  border-radius: 6px;
-  background: linear-gradient(135deg, #4d6bfe, #7b9aff);
-  color: #fff;
-  font-size: 15px;
-  font-weight: 700;
-  letter-spacing: 0.5px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1;
-}
+/* -- assistant messages: white bubble, left-aligned -- */
 html.dsh-wx [data-chat-flow-kind="assistant-step"] div[class*="_body"] {
   background: #ffffff !important;
   border-radius: 8px !important;
@@ -428,11 +388,7 @@ html.dsh-wx [data-variant="think"] {
   overflow: hidden;
 }
 
-/* -- tool calls: indented, compact, card-like -- */
-html.dsh-wx [data-chat-flow-kind="tool-call"] {
-  margin-left: 52px;
-  margin-right: 8px;
-}
+/* -- tool calls: compact, card-like -- */
 html.dsh-wx [data-chat-flow-kind="tool-call"] [class*="_root"] {
   font-size: 13px;
 }
