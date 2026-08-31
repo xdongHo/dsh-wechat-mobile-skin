@@ -16,6 +16,13 @@
   "use strict";
   var html = document.documentElement;
   if (!html.classList.contains("dsh-wx")) return; // desktop → no-op
+  if (window.__DSH_WX_MOBILE_SKIN_LOADED__) return; // never double-mount
+  window.__DSH_WX_MOBILE_SKIN_LOADED__ = true;
+
+  var SKIN_CFG = window.__DSH_WX_MOBILE_SKIN__ || {};
+  var NAV_TITLE = typeof SKIN_CFG.navTitle === "string" && SKIN_CFG.navTitle
+    ? SKIN_CFG.navTitle
+    : "DeepSeek";
 
   var MODE_LIST = "wx-mode-list";
   var MODE_CHAT = "wx-mode-chat";
@@ -56,7 +63,7 @@
   var overlay = el("div"); overlay.id = "wxm-mobile-root";
   var nav = el("div"); nav.id = "wxm-nav";
   var navTitle = el("span"); navTitle.id = "wxm-nav-title";
-  navTitle.textContent = "DeepSeek";
+  navTitle.textContent = NAV_TITLE;
   var navCount = el("span"); navCount.id = "wxm-nav-count";
   navTitle.appendChild(navCount);
   var newBtn = el("button"); newBtn.id = "wxm-new"; newBtn.type = "button";
@@ -171,7 +178,7 @@
 
   function updateChatTitle() {
     var sel = selectedSession();
-    chatTitle.textContent = sel ? sel.title : "DeepSeek";
+    chatTitle.textContent = sel ? sel.title : NAV_TITLE;
     chatStatus.className = sel && sel.ongoing ? "is-ongoing" : "";
   }
 
