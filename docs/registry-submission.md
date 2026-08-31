@@ -30,7 +30,7 @@ description:
 |---|---|
 | `package.json` 声明 `dsh.bundle` manifest | ✅ `dsh.bundle.patch: ./cordis.patch.yml`（仅声明 `dsh.client` 会被拒） |
 | 真实可用代码，非占位仓库 | ✅ 完整 host 半 + 皮肤资源 |
-| 仓库创建满 **1 天**、提交数 ≥ **10** | 推送到 GitHub 后计时满 1 天再开 PR；本仓库已按真实开发轨迹拆成 11 个提交 |
+| 仓库创建满 **1 天**、提交数 ≥ **10** | 推送到 GitHub 后计时满 1 天再开 PR；本仓库已含 10 个按真实开发轨迹划分的提交 |
 | 仓库添加 `dsh-plugin` topic | ⬜ 推送后在 GitHub 仓库页 → About → Topics 添加 |
 | 活跃维护 | 持续响应 issue / 更新 |
 
