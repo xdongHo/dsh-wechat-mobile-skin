@@ -28,6 +28,7 @@ unaffected.
 - Tool calls render as compact rows; context injections render as
   centered gray system notices
 - White rounded composer with a green send button
+- Floating stats ball: a draggable WeChat-green ball showing the turn count; tap it for steps, LLM/tool time, first-token speed, cache hit rate and token usage
 - The new-session screen is skinned too: WeChat gray background with a subtle hint, desktop hero artwork removed
 
 **🔧 Engineering**

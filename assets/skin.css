@@ -523,6 +523,105 @@ html.dsh-wx [data-phase="hero"] [class*="uV2eYG_card"] {
 }
 
 /* ============================================================
+   Floating stats ball (会话统计悬浮球)
+   The desktop stats strip under the composer is hidden; its
+   segments are extracted by skin.js and shown in a draggable
+   WeChat-green ball (turn count) + tappable stats panel.
+   ============================================================ */
+html.dsh-wx [data-slot="conversation.composer.dock"] {
+  display: none !important;
+}
+#wxm-ball {
+  position: fixed;
+  right: 14px;
+  bottom: 130px;
+  z-index: 3200;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #07c160, #059f4e);
+  border: 2px solid #ffffff;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+  color: #ffffff;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  line-height: 1.05;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  cursor: pointer;
+  opacity: 0.92;
+}
+html.dsh-wx.wx-mode-chat #wxm-ball.has-data { display: flex; }
+#wxm-ball .wxm-ball-num {
+  font-size: 15px;
+  font-weight: 700;
+}
+#wxm-ball .wxm-ball-label {
+  font-size: 9px;
+  opacity: 0.92;
+}
+#wxm-ball:active { opacity: 1; }
+#wxm-stats {
+  position: fixed;
+  z-index: 3300;
+  width: 252px;
+  max-width: calc(100vw - 16px);
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.18);
+  display: none;
+  overflow: hidden;
+  color: #191919;
+  font-size: 13px;
+}
+#wxm-stats.open { display: block; }
+#wxm-stats .wxm-stats-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  background: #ededed;
+  font-weight: 600;
+  font-size: 14px;
+}
+#wxm-stats .wxm-stats-close {
+  border: none;
+  background: transparent;
+  font-size: 15px;
+  color: #999999;
+  padding: 2px 4px;
+  cursor: pointer;
+}
+#wxm-stats .wxm-stats-body { padding: 6px 14px 10px; }
+.wxm-stats-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 5px 0;
+}
+.wxm-stats-row .dot {
+  flex: none;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  margin-top: 5px;
+  background: var(--c, #07c160);
+}
+.wxm-stats-row .txt {
+  flex: 1;
+  line-height: 1.45;
+  word-break: break-all;
+}
+.wxm-stats-empty {
+  padding: 16px;
+  text-align: center;
+  color: #b2b2b2;
+}
+
+/* ============================================================
    Generic mobile usability for portaled dialogs/menus
    (kept conservative: only direct body children that float)
    ============================================================ */

@@ -89,10 +89,29 @@
   chatStatus.appendChild(el("span", "wxm-dot"));
   chatbar.appendChild(backBtn); chatbar.appendChild(chatTitle); chatbar.appendChild(chatStatus);
 
+  /* floating stats ball + panel (会话统计悬浮球) */
+  var ball = el("div"); ball.id = "wxm-ball"; ball.setAttribute("role", "button");
+  ball.setAttribute("aria-label", "会话统计");
+  var ballNum = el("span", "wxm-ball-num", "·");
+  var ballLabel = el("span", "wxm-ball-label", "轮");
+  ball.appendChild(ballNum); ball.appendChild(ballLabel);
+  var panel = el("div"); panel.id = "wxm-stats";
+  var panelHead = el("div", "wxm-stats-head");
+  panelHead.appendChild(el("span", null, "会话统计"));
+  var panelClose = el("button", "wxm-stats-close"); panelClose.type = "button";
+  panelClose.textContent = "✕"; panelClose.setAttribute("aria-label", "关闭统计");
+  panelHead.appendChild(panelClose);
+  var panelBody = el("div", "wxm-stats-body");
+  panelBody.appendChild(el("div", "wxm-stats-empty", "暂无统计数据"));
+  panel.appendChild(panelHead); panel.appendChild(panelBody);
+
   function mountChrome() {
     if (!document.body) return false;
     if (overlay.parentNode !== document.body) document.body.appendChild(overlay);
     if (chatbar.parentNode !== document.body) document.body.appendChild(chatbar);
+    if (ball.parentNode !== document.body) document.body.appendChild(ball);
+    if (panel.parentNode !== document.body) document.body.appendChild(panel);
+    restoreBallPos();
     return true;
   }
 
@@ -103,6 +122,8 @@
     html.classList.remove(MODE_LIST, MODE_CHAT);
     html.classList.add(m);
     if (m === MODE_CHAT) updateChatTitle();
+    updateBallVisibility();
+    if (m !== MODE_CHAT) closePanel();
     window.scrollTo(0, 0);
   }
   function enterChat(push) {
@@ -119,6 +140,122 @@
       else enterList();
     } catch (e) { enterList(); }
   });
+
+  /* ---------------- floating stats ball (会话统计悬浮球) ---------------- */
+  var DOT_COLORS = ["#07c160", "#576b95", "#fa9d3b", "#9b6fe8", "#f76f6f"];
+  var statsSegments = [];
+
+  function extractStats() {
+    var dock = $('[data-slot="conversation.composer.dock"]');
+    var root = dock ? $('[class*="_root"]', dock) : null;
+    if (!root) { statsSegments = []; }
+    else {
+      statsSegments = $all("span", root)
+        .filter(function (s) { return !/sep/i.test(s.className) && s.textContent.trim(); })
+        .map(function (s) { return s.textContent.trim(); });
+    }
+    var m = (statsSegments[0] || "").match(/(\d+)\s*轮/);
+    ballNum.textContent = m ? m[1] : "·";
+    updateBallVisibility();
+    if (panel.classList.contains("open")) renderPanel();
+  }
+
+  function updateBallVisibility() {
+    ball.classList.toggle("has-data", mode === MODE_CHAT && statsSegments.length >= 2);
+    if (!ball.classList.contains("has-data")) closePanel();
+  }
+
+  function renderPanel() {
+    panelBody.textContent = "";
+    if (!statsSegments.length) {
+      panelBody.appendChild(el("div", "wxm-stats-empty", "暂无统计数据"));
+      return;
+    }
+    statsSegments.forEach(function (seg, i) {
+      var row = el("div", "wxm-stats-row");
+      var dot = el("span", "dot");
+      dot.style.setProperty("--c", DOT_COLORS[i % DOT_COLORS.length]);
+      row.appendChild(dot);
+      row.appendChild(el("span", "txt", seg));
+      panelBody.appendChild(row);
+    });
+  }
+
+  function openPanel() {
+    renderPanel();
+    panel.style.visibility = "hidden";
+    panel.classList.add("open");
+    var w = panel.offsetWidth, h = panel.offsetHeight;
+    var b = ball.getBoundingClientRect();
+    var left = Math.min(Math.max(8, b.right - w), window.innerWidth - w - 8);
+    var top = b.top - h - 10;
+    if (top < 56) top = Math.min(b.bottom + 10, window.innerHeight - h - 8);
+    panel.style.left = left + "px";
+    panel.style.top = top + "px";
+    panel.style.visibility = "";
+  }
+  function closePanel() { panel.classList.remove("open"); }
+  function togglePanel() {
+    if (panel.classList.contains("open")) closePanel();
+    else if (statsSegments.length) openPanel();
+  }
+  panelClose.addEventListener("click", closePanel);
+  document.addEventListener("pointerdown", function (e) {
+    if (!panel.classList.contains("open")) return;
+    if (panel.contains(e.target) || ball.contains(e.target)) return;
+    closePanel();
+  }, true);
+
+  /* draggable ball (vertical drag anywhere; snaps back to an edge) */
+  (function () {
+    var dragging = false, moved = false, sx = 0, sy = 0, ox = 0, oy = 0;
+    ball.addEventListener("pointerdown", function (e) {
+      dragging = true; moved = false; sx = e.clientX; sy = e.clientY;
+      var r = ball.getBoundingClientRect(); ox = r.left; oy = r.top;
+      try { ball.setPointerCapture(e.pointerId); } catch (err) {}
+    });
+    ball.addEventListener("pointermove", function (e) {
+      if (!dragging) return;
+      var dx = e.clientX - sx, dy = e.clientY - sy;
+      if (Math.abs(dx) > 6 || Math.abs(dy) > 6) moved = true;
+      if (!moved) return;
+      var w = ball.offsetWidth, h = ball.offsetHeight;
+      var x = Math.min(Math.max(4, ox + dx), window.innerWidth - w - 4);
+      var y = Math.min(Math.max(56, oy + dy), window.innerHeight - h - 8);
+      ball.style.left = x + "px"; ball.style.top = y + "px";
+      ball.style.right = "auto"; ball.style.bottom = "auto";
+    });
+    ball.addEventListener("pointerup", function () {
+      if (!dragging) return;
+      dragging = false;
+      if (moved) {
+        // snap horizontally to the nearer edge
+        var r = ball.getBoundingClientRect();
+        var toLeft = r.left + r.width / 2 < window.innerWidth / 2;
+        ball.style.left = (toLeft ? 8 : window.innerWidth - r.width - 8) + "px";
+        ball.style.right = "auto";
+        try {
+          localStorage.setItem("wxm-ball-pos", JSON.stringify({
+            left: ball.style.left, top: ball.style.top, right: "auto", bottom: "auto"
+          }));
+        } catch (err) {}
+      } else {
+        togglePanel();
+      }
+    });
+  })();
+
+  function restoreBallPos() {
+    try {
+      var saved = localStorage.getItem("wxm-ball-pos");
+      if (!saved) return;
+      var p = JSON.parse(saved);
+      ["left", "top", "right", "bottom"].forEach(function (k) {
+        if (p[k]) ball.style[k] = p[k];
+      });
+    } catch (e) {}
+  }
+
 
   /* ---------------- sidebar tree snapshot ---------------- */
   // sessions: [{kind:'ws'|'sess', name, title, time, ongoing, selected, el}]
@@ -239,6 +376,7 @@
   function rebuildIfChanged() {
     keepLight();
     tagLayout();
+    extractStats();
     if (!snapshot()) {
       ensureSidebarExpanded();
       return;
