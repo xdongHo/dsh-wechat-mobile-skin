@@ -257,6 +257,83 @@
   }
 
 
+  /* ---------------- long-press → native session menu ----------------
+   * WeChat-style long press on a list row opens the app's own sidebar
+   * context menu (重命名 / 分叉会话 / 归档会话). The menu portal is
+   * repositioned for phones via the .wxm-native-menu class. */
+  var LONGPRESS_MS = 480;
+
+  function attachLongPress(rowEl, entry) {
+    var timer = null, startY = 0;
+    function cancelTimer() { if (timer) { clearTimeout(timer); timer = null; } }
+    rowEl.addEventListener("contextmenu", function (e) { e.preventDefault(); });
+    rowEl.addEventListener("pointerdown", function (e) {
+      startY = e.clientY;
+      cancelTimer();
+      timer = setTimeout(function () {
+        timer = null;
+        rowEl.dataset.wxSuppress = "1";
+        openNativeMenu(entry.el, e.clientY);
+      }, LONGPRESS_MS);
+    });
+    rowEl.addEventListener("pointermove", function (e) {
+      if (timer && Math.abs(e.clientY - startY) > 12) cancelTimer();
+    });
+    ["pointerup", "pointercancel", "pointerleave"].forEach(function (ev) {
+      rowEl.addEventListener(ev, cancelTimer);
+    });
+  }
+
+  function openNativeMenu(realRow, tapY) {
+    var btn = $('[class*="rowActions"] button', realRow) ||
+              $('button[aria-label*="的操作"]', realRow);
+    if (!btn) { warn("no action button on row"); return; }
+    // the app opens this menu from pointer events — replay the full sequence
+    var opts = { bubbles: true, cancelable: true, clientX: 6, clientY: 6, pointerId: 9, isPrimary: true, button: 0 };
+    btn.dispatchEvent(new PointerEvent("pointerdown", opts));
+    btn.dispatchEvent(new PointerEvent("pointerup", opts));
+    btn.dispatchEvent(new MouseEvent("mousedown", opts));
+    btn.dispatchEvent(new MouseEvent("mouseup", opts));
+    btn.click();
+    var tries = 0;
+    var iv = setInterval(function () {
+      tries++;
+      var portal = $all("body > div").filter(function (n) {
+        return (n.id || "").indexOf("wxm") !== 0 &&
+          /_portal_|_list_/.test(String(n.className)) &&
+          $('[role="menu"], [role="menuitem"]', n);
+      })[0];
+      if (portal) {
+        clearInterval(iv);
+        portal.classList.add("wxm-native-menu");
+      } else if (tries > 25) {
+        clearInterval(iv);
+        warn("menu portal not detected");
+      }
+    }, 60);
+  }
+
+  /* reposition the app's dialogs (rename / archive confirm / fork) as centered
+   * mobile modals, whenever a [role=dialog] portal is mounted */
+  function tagDialogPortal(d) {
+    if (!d || d.nodeType !== 1) return;
+    var top = d;
+    while (top.parentNode && top.parentNode !== document.body) top = top.parentNode;
+    var targets = top === document.body ? [d] : [top, d];
+    targets.forEach(function (n) {
+      if (!n.classList.contains("wxm-native-dialog")) n.classList.add("wxm-native-dialog");
+    });
+  }
+  var dialogObserver = new MutationObserver(function (muts) {
+    muts.forEach(function (m) {
+      m.addedNodes.forEach(function (n) {
+        if (n.nodeType !== 1 || !n.matches) return;
+        if (n.matches('[role="dialog"]')) tagDialogPortal(n);
+        else $all('[role="dialog"]', n).forEach(tagDialogPortal);
+      });
+    });
+  });
+
   /* ---------------- sidebar tree snapshot ---------------- */
   // sessions: [{kind:'ws'|'sess', name, title, time, ongoing, selected, el}]
   var sessions = [];
@@ -358,9 +435,11 @@
 
       row.appendChild(av); row.appendChild(main);
       row.addEventListener("click", function () {
+        if (row.dataset.wxSuppress === "1") { delete row.dataset.wxSuppress; return; }
         try { s.el.click(); } catch (e) { warn(e); }
         enterChat();
       });
+      attachLongPress(row, s);
       list.appendChild(row);
       lastWasRow = true;
     });
@@ -466,6 +545,9 @@
     ensureSidebarExpanded();
     rebuildIfChanged();
     observeEverything();
+    try {
+      dialogObserver.observe(document.body, { childList: true });
+    } catch (e) { warn("dialogObserver", e); }
     // keep waiting until the sidebar tree exists (app may still be loading)
     var tries = 0;
     var iv = setInterval(function () {

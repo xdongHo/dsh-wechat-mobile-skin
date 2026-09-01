@@ -622,6 +622,54 @@ html.dsh-wx.wx-mode-chat #wxm-ball.has-data { display: flex; }
 }
 
 /* ============================================================
+   Long-press → native session menu, repositioned for phones
+   ============================================================ */
+html.dsh-wx .wxm-row {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+/* the app's sidebar context-menu portal, centered like an action sheet */
+html.dsh-wx .wxm-native-menu {
+  position: fixed !important;
+  left: 50% !important;
+  top: 32vh !important;
+  transform: translateX(-50%) !important;
+  min-width: 210px !important;
+  max-width: 86vw !important;
+  max-height: 52vh !important;
+  overflow-y: auto !important;
+  background: #ffffff !important;
+  border-radius: 12px !important;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.22) !important;
+  padding: 4px !important;
+}
+html.dsh-wx .wxm-native-menu [role="menuitem"],
+html.dsh-wx .wxm-native-menu button {
+  min-height: 44px !important;
+  display: flex !important;
+  align-items: center !important;
+  font-size: 16px !important;
+  color: #191919 !important;
+  padding: 0 16px !important;
+  border-radius: 8px !important;
+}
+
+/* the app's dialogs (rename / archive confirm / fork) centered as modals */
+html.dsh-wx .wxm-native-dialog {
+  position: fixed !important;
+  left: 50% !important;
+  top: 38% !important;
+  transform: translate(-50%, -50%) !important;
+  width: min(92vw, 360px) !important;
+  max-width: 92vw !important;
+}
+html.dsh-wx .wxm-native-dialog input,
+html.dsh-wx .wxm-native-dialog textarea {
+  font-size: 16px !important; /* prevent iOS focus zoom */
+}
+
+/* ============================================================
    Generic mobile usability for portaled dialogs/menus
    (kept conservative: only direct body children that float)
    ============================================================ */
