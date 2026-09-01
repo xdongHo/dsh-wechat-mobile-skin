@@ -440,8 +440,87 @@ html.dsh-wx [data-composer-card] button[aria-label*="发送"]:disabled {
   color: #ffffff !important;
 }
 
-/* hero (新会话首屏) tinted like WeChat */
-html.dsh-wx [data-phase="hero"] { background: #ededed; }
+/* ============================================================
+   Hero phase (新建会话首屏) → WeChat-style empty chat
+   Drop the desktop hero decorations (glow, big headline, badge),
+   keep workspace/agent chips as compact pills, dock the composer
+   to the bottom like an ordinary WeChat conversation.
+   ============================================================ */
+html.dsh-wx [data-phase="hero"] {
+  background: #ededed !important;
+  padding: 0 !important;
+}
+/* desktop glow artwork */
+html.dsh-wx [data-phase="hero"] [class*="heroGlow"] {
+  display: none !important;
+}
+/* headline block: fish logo + 探索未至之境 + 预览版 badge */
+html.dsh-wx [data-phase="hero"] div[class*="pXSMma_root"] {
+  display: none !important;
+}
+/* subtle empty-chat hint, centered like WeChat's quiet background */
+html.dsh-wx [data-phase="hero"] [data-conversation-scroll] {
+  position: relative;
+  background: #ededed !important;
+}
+html.dsh-wx [data-phase="hero"] [data-conversation-scroll]::before {
+  content: "开始新的会话";
+  position: absolute;
+  top: 34%;
+  left: 0;
+  right: 0;
+  text-align: center;
+  font-size: 15px;
+  color: #b2b2b2;
+  pointer-events: none;
+}
+/* push the whole hero stack to the bottom so the composer docks */
+html.dsh-wx [data-phase="hero"] [class*="composerStack"] {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 0 !important;
+}
+/* workspace + agent preset selectors → compact white pills above input */
+html.dsh-wx [data-phase="hero"] [class*="heroWorkspaceRow"] {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 8px 12px !important;
+  margin: 0 !important;
+  order: 2;
+}
+html.dsh-wx [data-phase="hero"] [class*="heroWorkspaceRow"] button[class*="workspace"],
+html.dsh-wx [data-phase="hero"] [class*="heroWorkspaceRow"] button[class*="cubgiG_seat"] {
+  background: #ffffff !important;
+  border: 1px solid #e0e0e0 !important;
+  border-radius: 6px !important;
+  font-size: 12px !important;
+  color: #666666 !important;
+  padding: 4px 10px !important;
+  height: auto !important;
+  box-shadow: none !important;
+}
+html.dsh-wx [data-phase="hero"] [class*="heroWorkspaceRow"] svg {
+  width: 10px;
+  height: 10px;
+}
+/* hero composer behaves like the docked one */
+html.dsh-wx [data-phase="hero"] [class*="composerSeat"] {
+  order: 3;
+  margin-top: auto;
+}
+html.dsh-wx [data-phase="hero"] [class*="uV2eYG_root"] {
+  max-width: 100% !important;
+  margin: 0 !important;
+}
+html.dsh-wx [data-phase="hero"] [class*="uV2eYG_hero"],
+html.dsh-wx [data-phase="hero"] [class*="uV2eYG_card"] {
+  background: #ffffff !important;
+  border: none !important;
+  box-shadow: none !important;
+}
 
 /* ============================================================
    Generic mobile usability for portaled dialogs/menus

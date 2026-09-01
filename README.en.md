@@ -28,6 +28,7 @@ unaffected.
 - Tool calls render as compact rows; context injections render as
   centered gray system notices
 - White rounded composer with a green send button
+- The new-session screen is skinned too: WeChat gray background with a subtle hint, desktop hero artwork removed
 
 **🔧 Engineering**
 
