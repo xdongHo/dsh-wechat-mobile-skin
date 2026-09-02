@@ -62,13 +62,15 @@
   /* ---------------- build overlay chrome ---------------- */
   var overlay = el("div"); overlay.id = "wxm-mobile-root";
   var nav = el("div"); nav.id = "wxm-nav";
+  var fsBtnNav = el("button"); fsBtnNav.id = "wxm-fs-list"; fsBtnNav.type = "button";
+  fsBtnNav.setAttribute("aria-label", "切换全屏");
   var navTitle = el("span"); navTitle.id = "wxm-nav-title";
   navTitle.textContent = NAV_TITLE;
   var navCount = el("span"); navCount.id = "wxm-nav-count";
   navTitle.appendChild(navCount);
   var newBtn = el("button"); newBtn.id = "wxm-new"; newBtn.type = "button";
   newBtn.textContent = "+"; newBtn.title = "新建会话"; newBtn.setAttribute("aria-label", "新建会话");
-  nav.appendChild(navTitle); nav.appendChild(newBtn);
+  nav.appendChild(fsBtnNav); nav.appendChild(navTitle); nav.appendChild(newBtn);
 
   var searchWrap = el("div"); searchWrap.id = "wxm-searchbar";
   var search = el("input"); search.id = "wxm-search"; search.type = "text";
@@ -84,10 +86,12 @@
   backBtn.innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none">' +
     '<path d="M15 4 L7.5 12 L15 20" stroke="#191919" stroke-width="2.2" ' +
     'stroke-linecap="round" stroke-linejoin="round"/></svg>';
-  var chatTitle = el("div"); chatTitle.id = "wxm-chat-title"; chatTitle.textContent = "DeepSeek";
+  var chatTitle = el("div"); chatTitle.id = "wxm-chat-title"; chatTitle.textContent = NAV_TITLE;
   var chatStatus = el("div"); chatStatus.id = "wxm-chat-status";
   chatStatus.appendChild(el("span", "wxm-dot"));
-  chatbar.appendChild(backBtn); chatbar.appendChild(chatTitle); chatbar.appendChild(chatStatus);
+  var fsBtnChat = el("button"); fsBtnChat.id = "wxm-fs-chat"; fsBtnChat.type = "button";
+  fsBtnChat.setAttribute("aria-label", "切换全屏");
+  chatbar.appendChild(backBtn); chatbar.appendChild(chatTitle); chatbar.appendChild(fsBtnChat); chatbar.appendChild(chatStatus);
 
   /* floating stats ball + panel (会话统计悬浮球) */
   var ball = el("div"); ball.id = "wxm-ball"; ball.setAttribute("role", "button");
@@ -254,6 +258,54 @@
         if (p[k]) ball.style[k] = p[k];
       });
     } catch (e) {}
+  }
+
+  /* ---------------- immersive fullscreen (沉浸式全屏) ---------------- */
+  var FS_EXPAND = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none">' +
+    '<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" stroke="currentColor" stroke-width="2" ' +
+    'fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  var FS_SHRINK = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none">' +
+    '<path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5" stroke="currentColor" stroke-width="2" ' +
+    'fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+
+  function fsElement() {
+    return document.fullscreenElement || document.webkitFullscreenElement || null;
+  }
+  function updateFsButtons() {
+    var icon = fsElement() ? FS_SHRINK : FS_EXPAND;
+    [fsBtnNav, fsBtnChat].forEach(function (b) {
+      if (b) b.innerHTML = icon;
+    });
+  }
+  function toggleFullscreen() {
+    var rootEl = document.documentElement;
+    try {
+      if (fsElement()) {
+        (document.exitFullscreen || document.webkitExitFullscreen || function () {}).call(document);
+        return;
+      }
+      var req = rootEl.requestFullscreen || rootEl.webkitRequestFullscreen;
+      if (!req) { toast("此浏览器不支持全屏 API；iOS 可用「添加到主屏幕」获得沉浸式体验"); return; }
+      var p = req.call(rootEl);
+      if (p && p.catch) p.catch(function () { toast("浏览器拒绝了全屏请求"); });
+    } catch (e) { toast("全屏请求失败：" + e.message); }
+  }
+  document.addEventListener("fullscreenchange", updateFsButtons);
+  document.addEventListener("webkitfullscreenchange", updateFsButtons);
+  fsBtnNav.innerHTML = FS_EXPAND;
+  fsBtnChat.innerHTML = FS_EXPAND;
+
+  /* ---------------- toast ---------------- */
+  var toastEl = null, toastTimer = null;
+  function toast(msg) {
+    if (!toastEl) {
+      toastEl = el("div"); toastEl.id = "wxm-toast";
+      document.body.appendChild(toastEl);
+    }
+    toastEl.textContent = msg;
+    toastEl.classList.add("show");
+    if (toastTimer) clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { toastEl.classList.remove("show"); }, 2600);
   }
 
 
@@ -455,6 +507,7 @@
   function rebuildIfChanged() {
     keepLight();
     tagLayout();
+    expandSidebarSessions();
     extractStats();
     if (!snapshot()) {
       ensureSidebarExpanded();
@@ -515,6 +568,19 @@
       try { toggle.click(); warn("sidebar expanded for mobile list"); return true; } catch (e) {}
     }
     return false;
+  }
+
+  /* ---------------- expand the sidebar's collapsed session list ----------------
+   * The sidebar renders only the newest few sessions and hides the rest
+   * behind a "展开其余 N 个会话" toggle (a two-state button). The mirror
+   * follows the tree, so click it once (invisible — sidebar is hidden) and
+   * the next rebuild sees every session. */
+  function expandSidebarSessions() {
+    var btn = $('[role="tree"] [class*="sessionOverflowButton"]') ||
+              document.querySelector('[class*="sessionOverflowButton"]');
+    if (btn && btn.textContent.indexOf("展开") !== -1) {
+      try { btn.click(); } catch (e) { warn("expand sessions", e); }
+    }
   }
 
   /* ---------------- new session (+) ---------------- */
