@@ -43,6 +43,19 @@
       t = setTimeout(function () { t = null; fn(); }, ms);
     };
   }
+  // Unlike debounce, a throttle is guaranteed to run while mutations keep
+  // arriving (streaming output mutates the DOM continuously — a debounced
+  // rebuild would starve and the session list would freeze/go stale).
+  function throttle(fn, ms) {
+    var last = 0, timer = null;
+    return function () {
+      var now = Date.now();
+      if (now - last >= ms) { last = now; fn(); return; }
+      if (!timer) {
+        timer = setTimeout(function () { timer = null; last = Date.now(); fn(); }, ms - (now - last));
+      }
+    };
+  }
   function warn() { try { console.warn.apply(console, ["[wx-mobile]"].concat([].slice.call(arguments))); } catch (e) {} }
 
   /* ---------------- force light (v1 skin is light-only) ---------------- */
@@ -537,7 +550,7 @@
           openNativeMenu(s.el, rr.top);
         });
         top.appendChild(more);
-      } top.appendChild(more);
+      }
       var bottom = el("div", "wxm-row-bottom");
       var previewText = s.ongoing ? "会话进行中…" : "轻触打开 · 长按管理";
       if (s.selected && mode === MODE_LIST) previewText = "当前会话";
@@ -657,7 +670,10 @@
   search.addEventListener("input", debounce(render, 120));
 
   /* ---------------- observers ---------------- */
-  var mo = new MutationObserver(debounce(rebuildIfChanged, 180));
+  // Throttled (not debounced): streaming output mutates the DOM nonstop, and
+  // the mirror must keep rebuilding anyway — the snapshot + signature check
+  // makes each pass cheap.
+  var mo = new MutationObserver(throttle(rebuildIfChanged, 400));
   function observeEverything() {
     try {
       mo.observe(document.body, { childList: true, subtree: true, characterData: true });
