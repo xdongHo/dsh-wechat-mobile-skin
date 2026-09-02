@@ -269,35 +269,62 @@
     'fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 
   function fsElement() {
-    return document.fullscreenElement || document.webkitFullscreenElement || null;
+    return document.fullscreenElement || document.webkitFullscreenElement ||
+      document.mozFullScreenElement || document.msFullscreenElement || null;
   }
+  function fsRequestMethod() {
+    var rootEl = document.documentElement;
+    return rootEl.requestFullscreen || rootEl.webkitRequestFullscreen ||
+      rootEl.webkitRequestFullScreen || rootEl.mozRequestFullScreen ||
+      rootEl.msRequestFullscreen || null;
+  }
+  function fsExitMethod() {
+    return document.exitFullscreen || document.webkitExitFullscreen ||
+      document.mozCancelFullScreen || document.msExitFullscreen || null;
+  }
+  var lastFsState = null;
   function updateFsButtons() {
-    var icon = fsElement() ? FS_SHRINK : FS_EXPAND;
+    var on = !!fsElement();
+    var icon = on ? FS_SHRINK : FS_EXPAND;
     [fsBtnNav, fsBtnChat].forEach(function (b) {
       if (b) b.innerHTML = icon;
     });
+    if (lastFsState !== null && on !== lastFsState) {
+      toast(on ? "已进入全屏，点全屏按钮退出" : "已退出全屏");
+    }
+    lastFsState = on;
   }
   function toggleFullscreen() {
     var rootEl = document.documentElement;
     try {
       if (fsElement()) {
-        (document.exitFullscreen || document.webkitExitFullscreen || function () {}).call(document);
+        var ex = fsExitMethod();
+        if (ex) ex.call(document);
         return;
       }
-      var req = rootEl.requestFullscreen || rootEl.webkitRequestFullscreen;
-      if (!req) { toast("此浏览器不支持全屏 API；iOS 可用「添加到主屏幕」获得沉浸式体验"); return; }
+      var req = fsRequestMethod();
+      if (!req) {
+        toast("此浏览器不支持网页全屏（微信内置浏览器常见）：iOS 用「添加到主屏幕」打开，安卓建议菜单里选「在浏览器中打开」", 4200);
+        return;
+      }
       var p = req.call(rootEl);
-      if (p && p.catch) p.catch(function () { toast("浏览器拒绝了全屏请求"); });
-    } catch (e) { toast("全屏请求失败：" + e.message); }
+      if (p && p.catch) {
+        p.catch(function () {
+          toast("全屏请求被拒绝：请检查浏览器的全屏/权限设置，或换系统浏览器打开", 3600);
+        });
+      }
+    } catch (e) { toast("全屏失败：" + e.message); }
   }
   document.addEventListener("fullscreenchange", updateFsButtons);
   document.addEventListener("webkitfullscreenchange", updateFsButtons);
+  document.addEventListener("mozfullscreenchange", updateFsButtons);
+  document.addEventListener("msfullscreenchange", updateFsButtons);
   fsBtnNav.innerHTML = FS_EXPAND;
   fsBtnChat.innerHTML = FS_EXPAND;
 
   /* ---------------- toast ---------------- */
   var toastEl = null, toastTimer = null;
-  function toast(msg) {
+  function toast(msg, ms) {
     if (!toastEl) {
       toastEl = el("div"); toastEl.id = "wxm-toast";
       document.body.appendChild(toastEl);
@@ -305,7 +332,7 @@
     toastEl.textContent = msg;
     toastEl.classList.add("show");
     if (toastTimer) clearTimeout(toastTimer);
-    toastTimer = setTimeout(function () { toastEl.classList.remove("show"); }, 2600);
+    toastTimer = setTimeout(function () { toastEl.classList.remove("show"); }, ms || 2600);
   }
 
 
