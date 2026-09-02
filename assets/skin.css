@@ -21,7 +21,7 @@ html.dsh-wx body {
 /* ---------- view mode plumbing ---------- */
 /* list mode: hide the whole app behind the WeChat-style list overlay */
 html.dsh-wx.wx-mode-list #root { visibility: hidden; }
-html.dsh-wx.wx-mode-list #wxm-mobile-root { display: block !important; }
+html.dsh-wx.wx-mode-list #wxm-mobile-root { display: flex !important; }
 html.dsh-wx.wx-mode-list #wxm-chatbar { display: none !important; }
 
 /* chat mode: hide the list, show the chat chrome */
@@ -180,6 +180,7 @@ html.dsh-wx.wx-mode-chat #wxm-mobile-root { display: none; }
 
 #wxm-list {
   flex: 1;
+  min-height: 0; /* allow the flex item to shrink so overflow-y can engage */
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   background: #ededed;
