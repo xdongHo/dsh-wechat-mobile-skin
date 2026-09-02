@@ -30,7 +30,7 @@ unaffected.
 - White rounded composer with a green send button
 - Auto-expands the sidebar's collapsed session list so every session shows
 - Fullscreen toggle in both top bars (Fullscreen API; iOS falls back to an Add-to-Home-Screen hint)
-- Long-press a session for the native menu (rename / fork / archive), repositioned as a phone-friendly centered sheet
+- Long-press a session (or tap the row's \u22af) for the native menu (rename / fork / archive), repositioned as a phone-friendly centered sheet
 - Floating stats ball: a draggable WeChat-green ball showing the turn count; tap it for steps, LLM/tool time, first-token speed, cache hit rate and token usage
 - The new-session screen is skinned too: WeChat gray background with a subtle hint, desktop hero artwork removed
 

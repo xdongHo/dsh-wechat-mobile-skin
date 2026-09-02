@@ -206,6 +206,26 @@ html.dsh-wx.wx-mode-chat #wxm-mobile-root { display: none; }
   box-sizing: border-box;
 }
 .wxm-row:active { background: #e5e5e5; }
+/* "⋯" quick menu button on each row */
+.wxm-row-more {
+  flex: none;
+  width: 26px;
+  height: 26px;
+  margin-left: 2px;
+  align-self: center;
+  border: none;
+  background: transparent;
+  color: #b2b2b2;
+  font-size: 18px;
+  line-height: 26px;
+  padding: 0;
+  cursor: pointer;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.wxm-row-more:active { background: rgba(0, 0, 0, 0.06); color: #191919; }
 .wxm-row + .wxm-row::before {
   content: "";
   position: absolute;

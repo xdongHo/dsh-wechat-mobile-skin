@@ -318,20 +318,40 @@
   function attachLongPress(rowEl, entry) {
     var timer = null, startY = 0;
     function cancelTimer() { if (timer) { clearTimeout(timer); timer = null; } }
-    rowEl.addEventListener("contextmenu", function (e) { e.preventDefault(); });
+    function fire(clientY) {
+      cancelTimer();
+      rowEl.dataset.wxSuppress = "1";
+      openNativeMenu(entry.el, clientY);
+    }
+    // Android/desktop browsers fire contextmenu on long-press — use it directly
+    rowEl.addEventListener("contextmenu", function (e) {
+      e.preventDefault();
+      fire(e.clientY || 300);
+    });
+    // pointer-event path (desktop, Android Chrome)
     rowEl.addEventListener("pointerdown", function (e) {
       startY = e.clientY;
       cancelTimer();
-      timer = setTimeout(function () {
-        timer = null;
-        rowEl.dataset.wxSuppress = "1";
-        openNativeMenu(entry.el, e.clientY);
-      }, LONGPRESS_MS);
+      timer = setTimeout(function () { fire(e.clientY); }, LONGPRESS_MS);
     });
     rowEl.addEventListener("pointermove", function (e) {
       if (timer && Math.abs(e.clientY - startY) > 12) cancelTimer();
     });
     ["pointerup", "pointercancel", "pointerleave"].forEach(function (ev) {
+      rowEl.addEventListener(ev, cancelTimer);
+    });
+    // touch-event path — iOS Safari fires pointercancel mid-long-press, so
+    // the raw touch sequence is the reliable signal there
+    rowEl.addEventListener("touchstart", function (e) {
+      if (e.touches.length !== 1) return;
+      startY = e.touches[0].clientY;
+      cancelTimer();
+      timer = setTimeout(function () { fire(startY); }, LONGPRESS_MS);
+    }, { passive: true });
+    rowEl.addEventListener("touchmove", function (e) {
+      if (timer && e.touches.length === 1 && Math.abs(e.touches[0].clientY - startY) > 12) cancelTimer();
+    }, { passive: true });
+    ["touchend", "touchcancel"].forEach(function (ev) {
       rowEl.addEventListener(ev, cancelTimer);
     });
   }
@@ -477,8 +497,22 @@
       var t = el("span", "wxm-row-title", s.title);
       var tm = el("span", "wxm-row-time", s.time);
       top.appendChild(t); top.appendChild(tm);
+      // only real sessions carry the native actions menu — the "新会话"
+      // placeholder row has no action button on the desktop either
+      if ($('[class*="rowActions"] button', s.el)) {
+        var more = el("button", "wxm-row-more"); more.type = "button";
+        more.textContent = "⋯";
+        more.setAttribute("aria-label", "会话操作：" + s.title);
+        more.addEventListener("pointerdown", function (e) { e.stopPropagation(); });
+        more.addEventListener("click", function (e) {
+          e.stopPropagation();
+          var rr = more.getBoundingClientRect();
+          openNativeMenu(s.el, rr.top);
+        });
+        top.appendChild(more);
+      } top.appendChild(more);
       var bottom = el("div", "wxm-row-bottom");
-      var previewText = s.ongoing ? "会话进行中…" : "轻触继续对话";
+      var previewText = s.ongoing ? "会话进行中…" : "轻触打开 · 长按管理";
       if (s.selected && mode === MODE_LIST) previewText = "当前会话";
       var pv = el("span", "wxm-row-preview", previewText);
       bottom.appendChild(pv);
