@@ -75,15 +75,13 @@
   /* ---------------- build overlay chrome ---------------- */
   var overlay = el("div"); overlay.id = "wxm-mobile-root";
   var nav = el("div"); nav.id = "wxm-nav";
-  var fsBtnNav = el("button"); fsBtnNav.id = "wxm-fs-list"; fsBtnNav.type = "button";
-  fsBtnNav.setAttribute("aria-label", "切换全屏");
   var navTitle = el("span"); navTitle.id = "wxm-nav-title";
   navTitle.textContent = NAV_TITLE;
   var navCount = el("span"); navCount.id = "wxm-nav-count";
   navTitle.appendChild(navCount);
   var newBtn = el("button"); newBtn.id = "wxm-new"; newBtn.type = "button";
   newBtn.textContent = "+"; newBtn.title = "新建会话"; newBtn.setAttribute("aria-label", "新建会话");
-  nav.appendChild(fsBtnNav); nav.appendChild(navTitle); nav.appendChild(newBtn);
+  nav.appendChild(navTitle); nav.appendChild(newBtn);
 
   var searchWrap = el("div"); searchWrap.id = "wxm-searchbar";
   var search = el("input"); search.id = "wxm-search"; search.type = "text";
@@ -102,9 +100,7 @@
   var chatTitle = el("div"); chatTitle.id = "wxm-chat-title"; chatTitle.textContent = NAV_TITLE;
   var chatStatus = el("div"); chatStatus.id = "wxm-chat-status";
   chatStatus.appendChild(el("span", "wxm-dot"));
-  var fsBtnChat = el("button"); fsBtnChat.id = "wxm-fs-chat"; fsBtnChat.type = "button";
-  fsBtnChat.setAttribute("aria-label", "切换全屏");
-  chatbar.appendChild(backBtn); chatbar.appendChild(chatTitle); chatbar.appendChild(fsBtnChat); chatbar.appendChild(chatStatus);
+  chatbar.appendChild(backBtn); chatbar.appendChild(chatTitle); chatbar.appendChild(chatStatus);
 
   /* floating stats ball + panel (会话统计悬浮球) */
   var ball = el("div"); ball.id = "wxm-ball"; ball.setAttribute("role", "button");
@@ -272,68 +268,6 @@
       });
     } catch (e) {}
   }
-
-  /* ---------------- immersive fullscreen (沉浸式全屏) ---------------- */
-  var FS_EXPAND = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none">' +
-    '<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" stroke="currentColor" stroke-width="2" ' +
-    'fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>';
-  var FS_SHRINK = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none">' +
-    '<path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5" stroke="currentColor" stroke-width="2" ' +
-    'fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>';
-
-  function fsElement() {
-    return document.fullscreenElement || document.webkitFullscreenElement ||
-      document.mozFullScreenElement || document.msFullscreenElement || null;
-  }
-  function fsRequestMethod() {
-    var rootEl = document.documentElement;
-    return rootEl.requestFullscreen || rootEl.webkitRequestFullscreen ||
-      rootEl.webkitRequestFullScreen || rootEl.mozRequestFullScreen ||
-      rootEl.msRequestFullscreen || null;
-  }
-  function fsExitMethod() {
-    return document.exitFullscreen || document.webkitExitFullscreen ||
-      document.mozCancelFullScreen || document.msExitFullscreen || null;
-  }
-  var lastFsState = null;
-  function updateFsButtons() {
-    var on = !!fsElement();
-    var icon = on ? FS_SHRINK : FS_EXPAND;
-    [fsBtnNav, fsBtnChat].forEach(function (b) {
-      if (b) b.innerHTML = icon;
-    });
-    if (lastFsState !== null && on !== lastFsState) {
-      toast(on ? "已进入全屏，点全屏按钮退出" : "已退出全屏");
-    }
-    lastFsState = on;
-  }
-  function toggleFullscreen() {
-    var rootEl = document.documentElement;
-    try {
-      if (fsElement()) {
-        var ex = fsExitMethod();
-        if (ex) ex.call(document);
-        return;
-      }
-      var req = fsRequestMethod();
-      if (!req) {
-        toast("此浏览器不支持网页全屏（微信内置浏览器常见）：iOS 用「添加到主屏幕」打开，安卓建议菜单里选「在浏览器中打开」", 4200);
-        return;
-      }
-      var p = req.call(rootEl);
-      if (p && p.catch) {
-        p.catch(function () {
-          toast("全屏请求被拒绝：请检查浏览器的全屏/权限设置，或换系统浏览器打开", 3600);
-        });
-      }
-    } catch (e) { toast("全屏失败：" + e.message); }
-  }
-  document.addEventListener("fullscreenchange", updateFsButtons);
-  document.addEventListener("webkitfullscreenchange", updateFsButtons);
-  document.addEventListener("mozfullscreenchange", updateFsButtons);
-  document.addEventListener("msfullscreenchange", updateFsButtons);
-  fsBtnNav.innerHTML = FS_EXPAND;
-  fsBtnChat.innerHTML = FS_EXPAND;
 
   /* ---------------- toast ---------------- */
   var toastEl = null, toastTimer = null;
